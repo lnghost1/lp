@@ -10,6 +10,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { Button } from './components/Button';
+import { Logo } from './components/Logo';
 import { ProfileHighlight } from './components/ProfileHighlight';
 
 const App: React.FC = () => {
@@ -24,9 +25,10 @@ const App: React.FC = () => {
       {/* Sticky Top Bar (Mobile Optimization) */}
       <div className="fixed top-0 w-full bg-nexus-dark/85 backdrop-blur-md border-b border-gray-800 z-50 py-3 px-4">
         <div className="mx-auto max-w-5xl flex items-center justify-end relative">
-          <span className="absolute left-1/2 -translate-x-1/2 font-black text-xl tracking-tighter italic">
-            NEXUS <span className="text-nexus-green">TRADE IA</span>
-          </span>
+          <Logo
+            className="absolute left-1/2 -translate-x-1/2"
+            size={26}
+          />
           <button
             type="button"
             onClick={handleJoinClick}
@@ -38,7 +40,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <main className="container mx-auto max-w-5xl px-4 pt-24 pb-24 flex flex-col items-center text-center">
+      <main className="container mx-auto max-w-5xl px-4 pt-16 pb-24 flex flex-col items-center text-center">
         
         {/* Hero Section */}
         <section className="w-full mb-8 animate-fade-in-up">
@@ -47,15 +49,15 @@ const App: React.FC = () => {
             <div className="sm:hidden">
               <div className="mx-auto max-w-[420px]">
                 <h1 className="mt-5 text-3xl font-black leading-[1.06] uppercase">
-                  VOCÊ PODE LUCRAR DE
+                  VOCÊ PODE FAZER DE
                   <span className="block my-3">
                     <span className="inline-block rounded-xl bg-nexus-green text-nexus-dark px-4 py-2 shadow-[0_0_35px_rgba(0,231,1,0.55)]">
-                      R$500 A R$3.000
+                      R$300 A R$1.000
                     </span>
                   </span>
-                  POR DIA
+                  POR DIA COM ESSA IA
                   <span className="block mt-2 text-base text-gray-200">
-                    SÓ COM A MINHA <span className="text-nexus-green">INTELIGÊNCIA ARTIFICIAL</span>
+                    <span className="font-bold text-nexus-green/90">MESMO SEM ENTENDER DE GRÁFICOS</span>
                   </span>
                 </h1>
 
@@ -87,10 +89,17 @@ const App: React.FC = () => {
 
             {/* Desktop (clean) */}
             <div className="hidden sm:block">
-              <h1 className="mt-5 text-4xl md:text-5xl font-black leading-[1.05] tracking-tight">
-                Decisões mais rápidas.
-                <span className="block text-nexus-green drop-shadow-[0_0_18px_rgba(0,231,1,0.35)]">Execução simples no celular.</span>
-                <span className="block text-gray-200">Com orientação clara para você começar hoje.</span>
+              <h1 className="mt-5 text-4xl md:text-5xl font-black leading-[1.05] tracking-tight uppercase">
+                VOCÊ PODE FAZER DE
+                <span className="block mt-4">
+                  <span className="inline-block rounded-2xl bg-nexus-green text-nexus-dark px-6 py-3 shadow-[0_0_45px_rgba(0,231,1,0.55)]">
+                    R$300 A R$1.000
+                  </span>
+                </span>
+                <span className="block mt-4 text-gray-200">POR DIA COM ESSA IA</span>
+                <span className="block mt-3 text-base md:text-lg text-gray-200">
+                  <span className="font-bold text-nexus-green/90">MESMO SEM ENTENDER DE GRÁFICOS</span>
+                </span>
               </h1>
 
               <p className="mt-4 text-base md:text-lg text-gray-300 leading-relaxed">
