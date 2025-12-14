@@ -12,6 +12,7 @@ import {
 import { Button } from './components/Button';
 import { Logo } from './components/Logo';
 import { ProfileHighlight } from './components/ProfileHighlight';
+import { TestimonialsCarousel } from './components/TestimonialsCarousel';
 
 const App: React.FC = () => {
   const handleJoinClick = () => {
@@ -167,37 +168,26 @@ const App: React.FC = () => {
           </p>
         </section>
 
-        {/* Social Proof / Stats Ticker */}
-        <div className="w-full max-w-3xl bg-nexus-card border border-gray-800 rounded-2xl p-5 mb-10">
-          <div className="flex justify-between items-center text-sm font-semibold text-gray-400 border-b border-gray-800 pb-3 mb-3">
-            <span>Relatos recentes</span>
+        <div className="w-full max-w-3xl mb-10">
+          <div className="flex justify-between items-center text-sm font-semibold text-gray-400 mb-3 px-1">
+            <span>Depoimentos</span>
             <span className="text-nexus-green flex items-center gap-2">
               <span className="w-2 h-2 bg-nexus-green rounded-full shadow-[0_0_14px_rgba(0,231,1,0.55)]"></span>
               Atualizado
             </span>
           </div>
-          <div className="space-y-3">
-            {[
-              { name: 'Ricardo S.', value: '+ R$ 1.842,00', time: 'hoje' },
-              { name: 'Ana Paula', value: '+ R$ 920,50', time: 'hoje' },
-              { name: 'Marcos V.', value: '+ R$ 3.250,00', time: 'hoje' },
-            ].map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center bg-nexus-dark/40 p-3 rounded-xl border border-gray-900">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-300">
-                    {item.name.charAt(0)}
-                  </div>
-                  <div className="text-left">
-                    <div className="text-gray-200 font-semibold leading-tight">{item.name}</div>
-                    <div className="text-[11px] text-gray-500">relato · {item.time}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-nexus-green font-black">{item.value}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+
+          <TestimonialsCarousel
+            intervalMs={15000}
+            items={[
+              { src: '/testimonials/whatsapp-1.png', alt: 'Depoimento WhatsApp 1' },
+              { src: '/testimonials/whatsapp-2.png', alt: 'Depoimento WhatsApp 2' },
+              { src: '/testimonials/whatsapp-3.png', alt: 'Depoimento WhatsApp 3' },
+              { src: '/testimonials/whatsapp-4.png', alt: 'Depoimento WhatsApp 4' },
+              { src: '/testimonials/whatsapp-5.png', alt: 'Depoimento WhatsApp 5' },
+              { src: '/testimonials/whatsapp-6.png', alt: 'Depoimento WhatsApp 6' },
+            ]}
+          />
         </div>
 
         {/* Features / Benefits */}
@@ -242,7 +232,7 @@ const App: React.FC = () => {
           </p>
           
           <Button
-            text="Entrar na comunidade"
+            text="UTILIZAR A IA AGORA MESMO"
             onClick={handleJoinClick}
           />
 
