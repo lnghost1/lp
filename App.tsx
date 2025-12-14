@@ -16,8 +16,10 @@ import { TestimonialsCarousel } from './components/TestimonialsCarousel';
 
 const App: React.FC = () => {
   const handleJoinClick = () => {
-    window.location.href =
-      'https://chat.whatsapp.com/DLZIlVw0jkr0g52rn2FoWH?mode=hqrt3';
+    const phone = '5511982416073';
+    const message = 'Quero operar com a nexus trade';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -180,12 +182,12 @@ const App: React.FC = () => {
           <TestimonialsCarousel
             intervalMs={15000}
             items={[
-              { src: '/testimonials/whatsapp-1.png', alt: 'Depoimento WhatsApp 1' },
-              { src: '/testimonials/whatsapp-2.png', alt: 'Depoimento WhatsApp 2' },
-              { src: '/testimonials/whatsapp-3.png', alt: 'Depoimento WhatsApp 3' },
-              { src: '/testimonials/whatsapp-4.png', alt: 'Depoimento WhatsApp 4' },
-              { src: '/testimonials/whatsapp-5.png', alt: 'Depoimento WhatsApp 5' },
-              { src: '/testimonials/whatsapp-6.png', alt: 'Depoimento WhatsApp 6' },
+              { src: '/whatsapp-1.png', alt: 'Depoimento WhatsApp 1' },
+              { src: '/whatsapp-2.png', alt: 'Depoimento WhatsApp 2' },
+              { src: '/whatsapp-3.png', alt: 'Depoimento WhatsApp 3' },
+              { src: '/whatsapp-4.png', alt: 'Depoimento WhatsApp 4' },
+              { src: '/whatsapp-5.png', alt: 'Depoimento WhatsApp 5' },
+              { src: '/whatsapp-6.png', alt: 'Depoimento WhatsApp 6' },
             ]}
           />
         </div>
@@ -232,7 +234,7 @@ const App: React.FC = () => {
           </p>
           
           <Button
-            text="UTILIZAR A IA AGORA MESMO"
+            text="OPERAR COM IA AGORA MESMO"
             onClick={handleJoinClick}
           />
 

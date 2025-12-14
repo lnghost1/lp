@@ -26,13 +26,34 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
     return [last, ...normalized, first];
   }, [hasLoop, normalized]);
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [index, setIndex] = useState(hasLoop ? 1 : 0);
   const [withTransition, setWithTransition] = useState(true);
+  const [dragOffset, setDragOffset] = useState(0);
   const indexRef = useRef(index);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartIndexRef = useRef(0);
 
   useEffect(() => {
     indexRef.current = index;
   }, [index]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+
+    const update = () => {
+      setContainerWidth(el.clientWidth);
+    };
+
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     setIndex(hasLoop ? 1 : 0);
@@ -65,7 +86,60 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
     }
   };
 
+  const goPrev = () => {
+    if (!hasLoop) return;
+    setIndex((i) => i - 1);
+  };
+
+  const goNext = () => {
+    if (!hasLoop) return;
+    setIndex((i) => i + 1);
+  };
+
+  const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (!hasLoop) return;
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartIndexRef.current = indexRef.current;
+    setWithTransition(false);
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (!isDraggingRef.current) return;
+    setDragOffset(e.clientX - dragStartXRef.current);
+  };
+
+  const onPointerUpOrCancel: React.PointerEventHandler<HTMLDivElement> = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+
+    const slideWidth = Math.max(280, Math.round(containerWidth * 0.82));
+    const threshold = Math.max(60, Math.round(slideWidth * 0.18));
+
+    const offset = dragOffset;
+    setDragOffset(0);
+    setWithTransition(true);
+
+    if (offset <= -threshold) {
+      setIndex(dragStartIndexRef.current + 1);
+      return;
+    }
+
+    if (offset >= threshold) {
+      setIndex(dragStartIndexRef.current - 1);
+      return;
+    }
+
+    setIndex(dragStartIndexRef.current);
+  };
+
   if (normalized.length === 0) return null;
+
+  const slideWidth = Math.max(280, Math.round(containerWidth * 0.82));
+  const gap = 16;
+  const sidePad = Math.max(0, Math.round((containerWidth - slideWidth) / 2));
+  const translateX = index * (slideWidth + gap) - sidePad - dragOffset;
 
   return (
     <div className={[
@@ -74,38 +148,77 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
     ].join(' ')}>
       <div className="absolute -inset-x-4 -inset-y-6 bg-gradient-to-r from-nexus-green/10 via-transparent to-nexus-cyan/10 blur-3xl opacity-60 pointer-events-none" />
 
-      <div className="relative overflow-hidden rounded-3xl border border-gray-800 bg-nexus-card">
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-nexus-card to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-nexus-card to-transparent" />
+      <div
+        ref={containerRef}
+        className="relative overflow-hidden rounded-3xl border border-gray-800 bg-nexus-card"
+      >
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-nexus-card to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-nexus-card to-transparent" />
+
+        {hasLoop && (
+          <>
+            <button
+              type="button"
+              onClick={goPrev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full border border-gray-800 bg-nexus-dark/70 text-gray-100 hover:border-nexus-green/40 transition-colors"
+              aria-label="Anterior"
+            >
+              <span className="text-xl leading-none">‹</span>
+            </button>
+            <button
+              type="button"
+              onClick={goNext}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full border border-gray-800 bg-nexus-dark/70 text-gray-100 hover:border-nexus-green/40 transition-colors"
+              aria-label="Próximo"
+            >
+              <span className="text-xl leading-none">›</span>
+            </button>
+          </>
+        )}
 
         <div
-          className="flex"
-          style={{
-            transform: `translateX(-${index * 100}%)`,
-            transition: withTransition ? 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
-          }}
-          onTransitionEnd={handleTransitionEnd}
+          className="relative"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUpOrCancel}
+          onPointerCancel={onPointerUpOrCancel}
+          style={{ touchAction: 'pan-y' }}
         >
-          {extended.map((item, i) => (
-            <div key={`${item.src}-${i}`} className="w-full shrink-0 p-4 sm:p-6">
-              <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-nexus-dark/40 shadow-[0_0_40px_rgba(0,231,1,0.08)]">
-                <div className="absolute inset-0 bg-gradient-to-br from-nexus-green/10 via-transparent to-nexus-cyan/10" />
-                <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-nexus-green/15 blur-3xl" />
-                <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-nexus-cyan/15 blur-3xl" />
+          <div
+            className="flex gap-4 py-4"
+            style={{
+              paddingLeft: sidePad,
+              paddingRight: sidePad,
+              transform: `translateX(-${translateX}px)`,
+              transition: withTransition ? 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+            }}
+            onTransitionEnd={handleTransitionEnd}
+          >
+            {extended.map((item, i) => (
+              <div
+                key={`${item.src}-${i}`}
+                className="shrink-0"
+                style={{ width: slideWidth }}
+              >
+                <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-nexus-dark/40 shadow-[0_0_40px_rgba(0,231,1,0.08)]">
+                  <div className="absolute inset-0 bg-gradient-to-br from-nexus-green/10 via-transparent to-nexus-cyan/10" />
+                  <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-nexus-green/15 blur-3xl" />
+                  <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-nexus-cyan/15 blur-3xl" />
 
-                <div className="relative p-3 sm:p-4">
-                  <div className="aspect-square w-full overflow-hidden rounded-xl border border-gray-900 bg-black/30">
-                    <img
-                      src={item.src}
-                      alt={item.alt ?? 'Depoimento'}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
+                  <div className="relative p-3 sm:p-4">
+                    <div className="aspect-square w-full overflow-hidden rounded-xl border border-gray-900 bg-black/30">
+                      <img
+                        src={item.src}
+                        alt={item.alt ?? 'Depoimento'}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
