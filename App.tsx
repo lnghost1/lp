@@ -182,12 +182,12 @@ const App: React.FC = () => {
           <TestimonialsCarousel
             intervalMs={15000}
             items={[
-              { src: '/whatsapp-1.png', alt: 'Depoimento WhatsApp 1' },
-              { src: '/whatsapp-2.png', alt: 'Depoimento WhatsApp 2' },
-              { src: '/whatsapp-3.png', alt: 'Depoimento WhatsApp 3' },
-              { src: '/whatsapp-4.png', alt: 'Depoimento WhatsApp 4' },
-              { src: '/whatsapp-5.png', alt: 'Depoimento WhatsApp 5' },
-              { src: '/whatsapp-6.png', alt: 'Depoimento WhatsApp 6' },
+              { src: '/whatsapp-1.png', alt: 'Depoimento WhatsApp 1', name: 'Diego', dayResult: '+R$ 2.842,25' },
+              { src: '/whatsapp-2.png', alt: 'Depoimento WhatsApp 2', name: 'Ricardo S.', dayResult: '+R$ 3.500' },
+              { src: '/whatsapp-3.png', alt: 'Depoimento WhatsApp 3', name: 'Ana Paula', dayResult: '+R$ 920,50' },
+              { src: '/whatsapp-4.png', alt: 'Depoimento WhatsApp 4', name: 'Marcos V.', dayResult: '+R$ 3.250,00' },
+              { src: '/whatsapp-5.png', alt: 'Depoimento WhatsApp 5', name: 'Lucas', dayResult: '+R$ 1.140,00' },
+              { src: '/whatsapp-6.png', alt: 'Depoimento WhatsApp 6', name: 'Fernanda', dayResult: '+R$ 780,00' },
             ]}
           />
         </div>

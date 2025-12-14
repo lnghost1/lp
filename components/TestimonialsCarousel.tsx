@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 type TestimonialItem = {
   src: string;
   alt?: string;
+  name?: string;
+  dayResult?: string;
 };
 
 type TestimonialsCarouselProps = {
@@ -206,13 +208,34 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                   <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-nexus-cyan/15 blur-3xl" />
 
                   <div className="relative p-3 sm:p-4">
-                    <div className="aspect-square w-full overflow-hidden rounded-xl border border-gray-900 bg-black/30">
+                    <div className="relative w-full overflow-hidden rounded-xl border border-gray-900 bg-black/60 aspect-[9/16] sm:aspect-square">
                       <img
                         src={item.src}
                         alt={item.alt ?? 'Depoimento'}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain"
                         loading="lazy"
                       />
+
+                      {(item.name || item.dayResult) && (
+                        <div className="absolute inset-x-2 top-2 flex items-start justify-between gap-2">
+                          {item.name ? (
+                            <div className="rounded-full border border-gray-800 bg-black/45 px-3 py-1 text-[12px] font-extrabold text-gray-100 backdrop-blur-md">
+                              {item.name}
+                            </div>
+                          ) : (
+                            <div />
+                          )}
+
+                          {item.dayResult ? (
+                            <div className="text-right">
+                              <div className="rounded-full border border-nexus-green/30 bg-nexus-green/10 px-3 py-1 text-[12px] font-black text-nexus-green backdrop-blur-md shadow-[0_0_18px_rgba(0,231,1,0.22)]">
+                                {item.dayResult}
+                              </div>
+                              <div className="mt-1 text-[10px] font-bold text-gray-300/80">em 1 dia</div>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
