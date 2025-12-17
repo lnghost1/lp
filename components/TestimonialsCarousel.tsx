@@ -94,6 +94,18 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
   }, [hasLoop]);
 
   useEffect(() => {
+    if (!assetsChecked) return;
+    if (availableItems.length === 0) return;
+    setIndex((current) => {
+      if (!hasLoop) return 0;
+      const lastRealIndex = availableItems.length;
+      if (current < 0) return 1;
+      if (current > lastRealIndex + 1) return 1;
+      return current;
+    });
+  }, [assetsChecked, availableItems.length, hasLoop]);
+
+  useEffect(() => {
     if (!hasLoop) return;
     const id = window.setInterval(() => {
       setIndex((i) => i + 1);
@@ -247,6 +259,12 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
                         alt={item.alt ?? 'Depoimento'}
                         className="h-full w-full object-contain"
                         loading="lazy"
+                        onError={() => {
+                          setAvailableItems((prev) => {
+                            const next = prev.filter((p) => p.src !== item.src);
+                            return next;
+                          });
+                        }}
                       />
 
                       {(item.name || item.dayResult) && (
