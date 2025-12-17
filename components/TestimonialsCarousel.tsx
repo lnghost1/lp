@@ -52,141 +52,62 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
   }, [normalized]);
 
   const hasLoop = availableItems.length > 1;
-
-  const extended = useMemo(() => {
-    if (!hasLoop) return availableItems;
-    const first = availableItems[0];
-    const last = availableItems[availableItems.length - 1];
-    return [last, ...availableItems, first];
-  }, [hasLoop, availableItems]);
-
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [index, setIndex] = useState(hasLoop ? 1 : 0);
-  const [withTransition, setWithTransition] = useState(true);
-  const [dragOffset, setDragOffset] = useState(0);
-  const indexRef = useRef(index);
-  const isDraggingRef = useRef(false);
-  const dragStartXRef = useRef(0);
-  const dragStartIndexRef = useRef(0);
+  const [index, setIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
+  const fadeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    indexRef.current = index;
-  }, [index]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-
-    const update = () => {
-      setContainerWidth(el.clientWidth);
+    return () => {
+      if (fadeTimerRef.current) window.clearTimeout(fadeTimerRef.current);
     };
-
-    update();
-
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
   }, []);
-
-  useEffect(() => {
-    setIndex(hasLoop ? 1 : 0);
-  }, [hasLoop]);
 
   useEffect(() => {
     if (!assetsChecked) return;
     if (availableItems.length === 0) return;
     setIndex((current) => {
-      if (!hasLoop) return 0;
-      const lastRealIndex = availableItems.length;
-      if (current < 0) return 1;
-      if (current > lastRealIndex + 1) return 1;
-      return current;
+      const max = availableItems.length - 1;
+      return Math.max(0, Math.min(current, max));
     });
-  }, [assetsChecked, availableItems.length, hasLoop]);
+  }, [assetsChecked, availableItems.length]);
 
-  useEffect(() => {
-    if (!hasLoop) return;
-    const id = window.setInterval(() => {
-      setIndex((i) => i + 1);
-    }, intervalMs);
-    return () => window.clearInterval(id);
-  }, [hasLoop, intervalMs]);
-
-  const handleTransitionEnd = () => {
-    if (!hasLoop) return;
-
-    const lastRealIndex = availableItems.length;
-
-    if (indexRef.current === 0) {
-      setWithTransition(false);
-      setIndex(lastRealIndex);
-      requestAnimationFrame(() => setWithTransition(true));
-      return;
-    }
-
-    if (indexRef.current === lastRealIndex + 1) {
-      setWithTransition(false);
-      setIndex(1);
-      requestAnimationFrame(() => setWithTransition(true));
-    }
+  const goTo = (nextIndex: number) => {
+    if (fadeTimerRef.current) window.clearTimeout(fadeTimerRef.current);
+    setIsFading(true);
+    fadeTimerRef.current = window.setTimeout(() => {
+      setIndex(nextIndex);
+      setIsFading(false);
+    }, 140);
   };
 
   const goPrev = () => {
     if (!hasLoop) return;
-    setIndex((i) => i - 1);
+    const len = availableItems.length;
+    const nextIndex = (index - 1 + len) % len;
+    goTo(nextIndex);
   };
 
   const goNext = () => {
     if (!hasLoop) return;
-    setIndex((i) => i + 1);
+    const len = availableItems.length;
+    const nextIndex = (index + 1) % len;
+    goTo(nextIndex);
   };
 
-  const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+  useEffect(() => {
     if (!hasLoop) return;
-    isDraggingRef.current = true;
-    dragStartXRef.current = e.clientX;
-    dragStartIndexRef.current = indexRef.current;
-    setWithTransition(false);
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-  };
-
-  const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    if (!isDraggingRef.current) return;
-    setDragOffset(e.clientX - dragStartXRef.current);
-  };
-
-  const onPointerUpOrCancel: React.PointerEventHandler<HTMLDivElement> = () => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-
-    const slideWidth = Math.max(280, Math.round(containerWidth * 0.82));
-    const threshold = Math.max(60, Math.round(slideWidth * 0.18));
-
-    const offset = dragOffset;
-    setDragOffset(0);
-    setWithTransition(true);
-
-    if (offset <= -threshold) {
-      setIndex(dragStartIndexRef.current + 1);
-      return;
-    }
-
-    if (offset >= threshold) {
-      setIndex(dragStartIndexRef.current - 1);
-      return;
-    }
-
-    setIndex(dragStartIndexRef.current);
-  };
+    const id = window.setInterval(() => {
+      const len = availableItems.length;
+      if (len <= 1) return;
+      goTo((index + 1) % len);
+    }, intervalMs);
+    return () => window.clearInterval(id);
+  }, [availableItems.length, hasLoop, index, intervalMs]);
 
   if (!assetsChecked) return null;
   if (availableItems.length === 0) return null;
 
-  const slideWidth = Math.max(280, Math.round(containerWidth * 0.82));
-  const gap = 16;
-  const sidePad = Math.max(0, Math.round((containerWidth - slideWidth) / 2));
-  const translateX = index * (slideWidth + gap) - sidePad - dragOffset;
+  const item = availableItems[index];
 
   return (
     <div className={[
@@ -196,7 +117,6 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
       <div className="absolute -inset-x-4 -inset-y-6 bg-gradient-to-r from-nexus-green/10 via-transparent to-nexus-cyan/10 blur-3xl opacity-60 pointer-events-none" />
 
       <div
-        ref={containerRef}
         className="relative overflow-hidden rounded-3xl border border-gray-800 bg-nexus-card"
       >
         <div className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-nexus-card to-transparent" />
@@ -223,75 +143,55 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
           </>
         )}
 
-        <div
-          className="relative"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUpOrCancel}
-          onPointerCancel={onPointerUpOrCancel}
-          style={{ touchAction: 'pan-y' }}
-        >
-          <div
-            className="flex gap-4 py-4"
-            style={{
-              paddingLeft: sidePad,
-              paddingRight: sidePad,
-              transform: `translateX(-${translateX}px)`,
-              transition: withTransition ? 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
-            }}
-            onTransitionEnd={handleTransitionEnd}
-          >
-            {extended.map((item, i) => (
-              <div
-                key={`${item.src}-${i}`}
-                className="shrink-0"
-                style={{ width: slideWidth }}
-              >
-                <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-nexus-dark/40 shadow-[0_0_40px_rgba(0,231,1,0.08)]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-nexus-green/10 via-transparent to-nexus-cyan/10" />
-                  <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-nexus-green/15 blur-3xl" />
-                  <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-nexus-cyan/15 blur-3xl" />
+        <div className="relative py-4 px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-[420px]">
+            <div
+              className={[
+                'relative overflow-hidden rounded-2xl border border-gray-800 bg-nexus-dark/40 shadow-[0_0_40px_rgba(0,231,1,0.08)]',
+                'transition-opacity duration-200',
+                isFading ? 'opacity-0' : 'opacity-100',
+              ].join(' ')}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-nexus-green/10 via-transparent to-nexus-cyan/10" />
+              <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-nexus-green/15 blur-3xl" />
+              <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-nexus-cyan/15 blur-3xl" />
 
-                  <div className="relative p-3 sm:p-4">
-                    <div className="relative w-full overflow-hidden rounded-xl border border-gray-900 bg-black/60 aspect-[9/16] sm:aspect-square">
-                      <img
-                        src={item.src}
-                        alt={item.alt ?? 'Depoimento'}
-                        className="h-full w-full object-contain"
-                        loading="lazy"
-                        onError={() => {
-                          setAvailableItems((prev) => {
-                            const next = prev.filter((p) => p.src !== item.src);
-                            return next;
-                          });
-                        }}
-                      />
+              <div className="relative p-3 sm:p-4">
+                <div className="relative w-full overflow-hidden rounded-xl border border-gray-900 bg-black/60 aspect-[9/16]">
+                  <img
+                    key={item.src}
+                    src={item.src}
+                    alt={item.alt ?? 'Depoimento'}
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                    onError={() => {
+                      setAvailableItems((prev) => prev.filter((p) => p.src !== item.src));
+                    }}
+                  />
 
-                      {(item.name || item.dayResult) && (
-                        <div className="absolute inset-x-2 top-2 flex items-start justify-between gap-2">
-                          {item.name ? (
-                            <div className="rounded-full border border-gray-800 bg-black/45 px-3 py-1 text-[12px] font-extrabold text-gray-100 backdrop-blur-md">
-                              {item.name}
-                            </div>
-                          ) : (
-                            <div />
-                          )}
-
-                          {item.dayResult ? (
-                            <div className="text-right">
-                              <div className="rounded-full border border-nexus-green/30 bg-nexus-green/10 px-3 py-1 text-[12px] font-black text-nexus-green backdrop-blur-md shadow-[0_0_18px_rgba(0,231,1,0.22)]">
-                                {item.dayResult}
-                              </div>
-                              <div className="mt-1 text-[10px] font-bold text-gray-300/80">em 1 dia</div>
-                            </div>
-                          ) : null}
+                  {(item.name || item.dayResult) && (
+                    <div className="absolute inset-x-2 top-2 flex items-start justify-between gap-2">
+                      {item.name ? (
+                        <div className="rounded-full border border-gray-800 bg-black/45 px-3 py-1 text-[12px] font-extrabold text-gray-100 backdrop-blur-md">
+                          {item.name}
                         </div>
+                      ) : (
+                        <div />
                       )}
+
+                      {item.dayResult ? (
+                        <div className="text-right">
+                          <div className="rounded-full border border-nexus-green/30 bg-nexus-green/10 px-3 py-1 text-[12px] font-black text-nexus-green backdrop-blur-md shadow-[0_0_18px_rgba(0,231,1,0.22)]">
+                            {item.dayResult}
+                          </div>
+                          <div className="mt-1 text-[10px] font-bold text-gray-300/80">em 1 dia</div>
+                        </div>
+                      ) : null}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
