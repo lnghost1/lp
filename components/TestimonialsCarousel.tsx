@@ -19,14 +19,46 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
   className,
 }) => {
   const normalized = useMemo(() => items.filter(Boolean), [items]);
-  const hasLoop = normalized.length > 1;
+  const [availableItems, setAvailableItems] = useState<TestimonialItem[]>([]);
+  const [assetsChecked, setAssetsChecked] = useState(false);
+
+  useEffect(() => {
+    let canceled = false;
+    setAssetsChecked(false);
+
+    const checks = normalized.map(
+      (item) =>
+        new Promise<TestimonialItem | null>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(item);
+          img.onerror = () => resolve(null);
+          img.src = item.src;
+        })
+    );
+
+    Promise.all(checks)
+      .then((results) => {
+        if (canceled) return;
+        setAvailableItems(results.filter(Boolean) as TestimonialItem[]);
+      })
+      .finally(() => {
+        if (canceled) return;
+        setAssetsChecked(true);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [normalized]);
+
+  const hasLoop = availableItems.length > 1;
 
   const extended = useMemo(() => {
-    if (!hasLoop) return normalized;
-    const first = normalized[0];
-    const last = normalized[normalized.length - 1];
-    return [last, ...normalized, first];
-  }, [hasLoop, normalized]);
+    if (!hasLoop) return availableItems;
+    const first = availableItems[0];
+    const last = availableItems[availableItems.length - 1];
+    return [last, ...availableItems, first];
+  }, [hasLoop, availableItems]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -72,7 +104,7 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
   const handleTransitionEnd = () => {
     if (!hasLoop) return;
 
-    const lastRealIndex = normalized.length;
+    const lastRealIndex = availableItems.length;
 
     if (indexRef.current === 0) {
       setWithTransition(false);
@@ -136,7 +168,8 @@ export const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({
     setIndex(dragStartIndexRef.current);
   };
 
-  if (normalized.length === 0) return null;
+  if (!assetsChecked) return null;
+  if (availableItems.length === 0) return null;
 
   const slideWidth = Math.max(280, Math.round(containerWidth * 0.82));
   const gap = 16;
