@@ -17,7 +17,7 @@ import { TestimonialsCarousel } from './components/TestimonialsCarousel';
 const App: React.FC = () => {
   const handleJoinClick = () => {
     const phone = '5511982416073';
-    const message = 'Quero operar com a nexus trade';
+    const message = 'Quero utilizar o nexus trade';
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };

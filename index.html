@@ -101,52 +101,6 @@
 
         const fbp = getCookie('_fbp');
 
-        const trackingPairs = [
-          ['fbclid', fbclid],
-          ['utm_source', utm_source],
-          ['utm_medium', utm_medium],
-          ['utm_campaign', utm_campaign],
-          ['utm_content', utm_content],
-          ['utm_term', utm_term],
-          ['fbp', fbp],
-        ].filter(([, v]) => v);
-
-        function appendTrackingToWhatsAppUrl(inputUrl) {
-          try {
-            const url = new URL(inputUrl);
-            const host = (url.hostname || '').toLowerCase();
-
-            const isWhatsApp =
-              host === 'wa.me' || host === 'api.whatsapp.com' || host === 'web.whatsapp.com';
-
-            if (!isWhatsApp) return inputUrl;
-            if (!trackingPairs.length) return inputUrl;
-
-            const trackingText = trackingPairs
-              .map(([k, v]) => `${k}=${v}`)
-              .join('\n');
-
-            const existingText = url.searchParams.get('text');
-            const nextText = existingText
-              ? `${existingText}\n\n${trackingText}`
-              : trackingText;
-
-            url.searchParams.set('text', nextText);
-            return url.toString();
-          } catch (_) {
-            return inputUrl;
-          }
-        }
-
-        const originalOpen = window.open;
-        if (typeof originalOpen === 'function') {
-          window.open = function (url, target, features) {
-            const nextUrl =
-              typeof url === 'string' ? appendTrackingToWhatsAppUrl(url) : url;
-            return originalOpen.call(window, nextUrl, target, features);
-          };
-        }
-
         const botoes = document.querySelectorAll("a[href*='/redirect']");
         botoes.forEach((botao) => {
           const url = new URL(botao.href);
