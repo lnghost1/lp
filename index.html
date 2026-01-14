@@ -57,6 +57,203 @@
 </head>
   <body>
     <div id="root"></div>
-  <script type="module" src="./index.tsx"></script>
-</body>
+    <script>
+      (function () {
+        function getCookie(name) {
+          const value = '; ' + document.cookie;
+          const parts = value.split('; ' + name + '=');
+          if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function setFbpCookie() {
+          if (!getCookie('_fbp')) {
+            const fbp =
+              'fb.1.' + Date.now() + '.' + Math.floor(Math.random() * 1e10);
+            document.cookie = `_fbp=${fbp}; path=/; domain=${location.hostname}; expires=${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toUTCString()}`;
+            console.log('✅ _fbp criado manualmente:', fbp);
+          } else {
+            console.log('ℹ _fbp já existe:', getCookie('_fbp'));
+          }
+        }
+
+        setFbpCookie();
+      })();
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        console.log(
+          'Adicionando parâmetros UTM e FBCLID aos botões de redirecionamento...'
+        );
+        const params = new URLSearchParams(window.location.search);
+        const fbclid = params.get('fbclid');
+        const utm_content = params.get('utm_content');
+        const utm_source = params.get('utm_source') || null;
+        const utm_medium = params.get('utm_medium') || null;
+        const utm_campaign = params.get('utm_campaign') || null;
+        const utm_term = params.get('utm_term') || null;
+
+        function getCookie(name) {
+          const value = '; ' + document.cookie;
+          const parts = value.split('; ' + name + '=');
+          if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        const fbp = getCookie('_fbp');
+
+        const trackingPairs = [
+          ['fbclid', fbclid],
+          ['utm_source', utm_source],
+          ['utm_medium', utm_medium],
+          ['utm_campaign', utm_campaign],
+          ['utm_content', utm_content],
+          ['utm_term', utm_term],
+          ['fbp', fbp],
+        ].filter(([, v]) => v);
+
+        function appendTrackingToWhatsAppUrl(inputUrl) {
+          try {
+            const url = new URL(inputUrl);
+            const host = (url.hostname || '').toLowerCase();
+
+            const isWhatsApp =
+              host === 'wa.me' || host === 'api.whatsapp.com' || host === 'web.whatsapp.com';
+
+            if (!isWhatsApp) return inputUrl;
+            if (!trackingPairs.length) return inputUrl;
+
+            const trackingText = trackingPairs
+              .map(([k, v]) => `${k}=${v}`)
+              .join('\n');
+
+            const existingText = url.searchParams.get('text');
+            const nextText = existingText
+              ? `${existingText}\n\n${trackingText}`
+              : trackingText;
+
+            url.searchParams.set('text', nextText);
+            return url.toString();
+          } catch (_) {
+            return inputUrl;
+          }
+        }
+
+        const originalOpen = window.open;
+        if (typeof originalOpen === 'function') {
+          window.open = function (url, target, features) {
+            const nextUrl =
+              typeof url === 'string' ? appendTrackingToWhatsAppUrl(url) : url;
+            return originalOpen.call(window, nextUrl, target, features);
+          };
+        }
+
+        const botoes = document.querySelectorAll("a[href*='/redirect']");
+        botoes.forEach((botao) => {
+          const url = new URL(botao.href);
+          if (fbclid) url.searchParams.set('fbclid', fbclid);
+          if (utm_content) url.searchParams.set('utm_content', utm_content);
+          if (utm_medium) url.searchParams.set('utm_medium', utm_medium);
+          if (utm_campaign) url.searchParams.set('utm_campaign', utm_campaign);
+          if (utm_source) url.searchParams.set('utm_source', utm_source);
+          if (utm_term) url.searchParams.set('utm_term', utm_term);
+          if (fbp) url.searchParams.set('fbp', fbp);
+          botao.href = url.toString();
+        });
+      });
+    </script>
+
+    <script>
+      (function () {
+        const PV_ENDPOINT = 'https://app.track-flow.pro/page_view';
+
+        // UID de visitante (1 ano)
+        function ensureUid() {
+          const k = 'tf_uid';
+          const parts = ('; ' + document.cookie).split('; ' + k + '=');
+
+          if (parts.length === 2) return parts.pop().split(';').shift();
+
+          const v = (
+            Math.random().toString(36).slice(2) + Date.now().toString(36)
+          ).slice(0, 24);
+          const exp = new Date(Date.now() + 365 * 864e5).toUTCString();
+
+          document.cookie = k + '=' + v + '; path=/; expires=' + exp;
+          return v;
+        }
+
+        function getCookie(name) {
+          const parts = ('; ' + document.cookie).split('; ' + name + '=');
+          return parts.length === 2
+            ? parts.pop().split(';').shift()
+            : undefined;
+        }
+
+        function sendPV() {
+          const uid = ensureUid();
+          const fbp = getCookie('_fbp');
+          const qs = new URLSearchParams(location.search);
+          const day = new Date().toISOString().slice(0, 10);
+
+          const key = `tfpv::${location.hostname}::${location.pathname}::${day}`;
+
+          // Se já enviou hoje nesta página, não manda de novo
+          if (localStorage.getItem(key)) {
+            console.log('⛔ PageView já enviado hoje para esta página');
+            return;
+          }
+          localStorage.setItem(key, '1');
+
+          const payload = {
+            tf_uid: uid,
+            ts: Math.floor(Date.now() / 1000),
+            day,
+            url: location.href,
+            ref: document.referrer || null,
+            path: location.pathname || '/',
+            fbclid: qs.get('fbclid') || null,
+            utm_source: qs.get('utm_source') || null,
+            utm_medium: qs.get('utm_medium') || null,
+            utm_campaign: qs.get('utm_campaign') || null,
+            utm_content: qs.get('utm_content') || null,
+            utm_term: qs.get('utm_term') || null,
+            fbp: fbp || null,
+          };
+
+          try {
+            const blob = new Blob([JSON.stringify(payload)], {
+              type: 'text/plain',
+            });
+
+            if (!navigator.sendBeacon || !navigator.sendBeacon(PV_ENDPOINT, blob)) {
+              fetch(PV_ENDPOINT, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload),
+              }).catch(() => {});
+            }
+
+            console.log('📩 PageView enviado (único por dia/página).');
+          } catch (e) {
+            try {
+              fetch(PV_ENDPOINT, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload),
+              }).catch(() => {});
+            } catch (_) {}
+          }
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', sendPV);
+        } else {
+          sendPV();
+        }
+      })();
+    </script>
+    <script type="module" src="./index.tsx"></script>
+  </body>
 </html>
